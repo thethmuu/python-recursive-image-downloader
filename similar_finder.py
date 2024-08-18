@@ -2,6 +2,7 @@ import os
 from PIL import Image
 import imagehash
 from collections import defaultdict
+import shutil
 
 
 def find_similar_images(directory, hash_size=8, threshold=5):
@@ -44,13 +45,29 @@ def find_similar_images(directory, hash_size=8, threshold=5):
     return similar_images
 
 
-def print_similar_images(similar_images):
+def move_similar_images(similar_images, base_directory):
     if similar_images:
         print("\nSimilar images found:")
+        similar_items_dir = os.path.join(base_directory, "similar_items")
+        os.makedirs(similar_items_dir, exist_ok=True)
+
         for base_image, similar_list in similar_images.items():
+            group_dir = os.path.join(similar_items_dir, os.path.basename(base_image))
+            os.makedirs(group_dir, exist_ok=True)
+
             print(f"Group:")
             print(f"  - {os.path.basename(base_image)}")
+            shutil.move(base_image, group_dir)
+
             for similar in similar_list:
                 print(f"  - {os.path.basename(similar)}")
+                shutil.move(similar, group_dir)
+
+        print(f"\nSimilar images have been moved to: {similar_items_dir}")
     else:
         print("\nNo similar images found.")
+
+
+def find_and_group_similar_images(folder_path):
+    similar_images = find_similar_images(folder_path)
+    move_similar_images(similar_images, folder_path)
