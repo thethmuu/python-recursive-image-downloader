@@ -3,6 +3,7 @@ import os
 from bs4 import BeautifulSoup
 import requests
 import sys
+from image_similarity import find_similar_images, print_similar_images
 
 download_folder = os.path.join(os.path.expanduser(
     '~'), 'Pictures', 'web_scraped_images')
@@ -77,6 +78,10 @@ def main():
             downloaded_count += 1
 
     print(f"Total images downloaded: {downloaded_count}")
+
+    # Find and print similar images
+    similar_images = find_similar_images(download_folder)
+    print_similar_images(similar_images)
 
 
 if __name__ == "__main__":
