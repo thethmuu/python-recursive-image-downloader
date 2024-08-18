@@ -29,37 +29,33 @@ def download_image(url, folder):
     print(f"File '{os.path.basename(filename)}' downloaded successfully.")
 
 
-def get_image_page_links(url):
+def get_image_page_links(url, selector):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
-    gallery_div = soup.find('div', id='gallery')
-    if gallery_div:
-        masonry_items = gallery_div.find_all('div', class_='masonry-item')
-        return [item.find('a')['href'] for item in masonry_items if item.find('a') and item.find('a')['href'] != '#']
-    return []
+    elements = soup.select(selector)
+    return [element['href'] for element in elements if 'href' in element.attrs and element['href'] != '#']
 
 
-def get_image_src(url):
+def get_image_src(url, selector):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
-    gallery_container = soup.find('div', class_='gallery-container')
-    if gallery_container:
-        img_tag = gallery_container.find('img')
-        return img_tag['src'] if img_tag and 'src' in img_tag.attrs else None
-    return None
+    img_tag = soup.select_one(selector)
+    return img_tag['src'] if img_tag and 'src' in img_tag.attrs else None
 
 
 def main():
-    # Prompt the user for the gallery URL
+    # Prompt the user for the gallery URL and selectors
     gallery_url = input("Please enter the gallery URL: ").strip()
-
     if not gallery_url:
         print("No URL provided. Exiting.")
         sys.exit(1)
+
+    gallery_selector = input("Enter the CSS selector for image page links (e.g., '.photo-album-wrapper .photo-item a'): ").strip()
+    image_selector = input("Enter the CSS selector for the image on the image page (e.g., '.features-video img'): ").strip()
 
     base_url = '/'.join(gallery_url.split('/')[:3])  # Extract base URL
 
@@ -67,12 +63,12 @@ def main():
     os.makedirs(download_folder, exist_ok=True)
 
     # Get image page links from the gallery page
-    image_page_links = get_image_page_links(gallery_url)
+    image_page_links = get_image_page_links(gallery_url, gallery_selector)
     downloaded_count = 0
     for link in image_page_links:
         # Handle relative URLs
         full_link = link if link.startswith('http') else f"{base_url}{link}"
-        img_src = get_image_src(full_link)
+        img_src = get_image_src(full_link, image_selector)
         print(img_src)
         if img_src:
             # Handle relative URLs for image sources
