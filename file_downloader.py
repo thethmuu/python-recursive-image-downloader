@@ -42,12 +42,20 @@ def download_images(download_folder):
         print("No URL provided. Exiting.")
         sys.exit(1)
 
-    gallery_selector = input(
-        "Enter the CSS selector for image page links (e.g., '.photo-album-wrapper .photo-item a'): "
-    ).strip()
-    image_selector = input(
-        "Enter the CSS selector for the image on the image page (e.g., '.features-video img'): "
-    ).strip()
+    def get_input_with_default(prompt, default):
+        user_input = input(
+            f"{prompt} (Press Enter to use default '{default}'): "
+        ).strip()
+        return user_input if user_input else default
+
+    gallery_selector = get_input_with_default(
+        "Enter the CSS selector for image page links",
+        ".photo-album-wrapper .photo-item a",
+    )
+
+    image_selector = get_input_with_default(
+        "Enter the CSS selector for the image on the image page", ".features-video img"
+    )
 
     base_url = "/".join(gallery_url.split("/")[:3])  # Extract base URL
 
@@ -56,6 +64,7 @@ def download_images(download_folder):
 
     # Get image page links from the gallery page
     image_page_links = get_image_page_links(gallery_url, gallery_selector)
+    print("image_page_links", image_page_links)
     downloaded_count = 0
     for link in image_page_links:
         # Handle relative URLs
