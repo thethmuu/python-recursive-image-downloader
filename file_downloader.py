@@ -3,12 +3,28 @@ import os
 from bs4 import BeautifulSoup
 import requests
 import sys
+import time
+
+# Create a session object
+session = requests.Session()
+
+# Set up headers
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+}
 
 
 def download_image(url, folder):
     try:
         filename = os.path.join(folder, url.split("/")[-1])
-        urllib.request.urlretrieve(url, filename)
+
+        # Use session to download image
+        response = session.get(url, headers=headers)
+        response.raise_for_status()
+
+        with open(filename, "wb") as f:
+            f.write(response.content)
+
         print(f"Downloaded: {filename}")
     except Exception as e:
         print(f"Error downloading {url}: {e}")
@@ -16,7 +32,8 @@ def download_image(url, folder):
 
 def get_image_page_links(url, selector):
     try:
-        response = requests.get(url)
+        response = session.get(url, headers=headers)
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         return [a["href"] for a in soup.select(selector)]
     except Exception as e:
@@ -26,7 +43,8 @@ def get_image_page_links(url, selector):
 
 def get_image_src(url, selector):
     try:
-        response = requests.get(url)
+        response = session.get(url, headers=headers)
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         img = soup.select_one(selector)
         return img["src"] if img else None
@@ -80,3 +98,9 @@ def download_images(download_folder):
             downloaded_count += 1
 
     print(f"Total images downloaded: {downloaded_count}")
+
+
+# Run the function
+if __name__ == "__main__":
+    download_folder = "downloaded_images"
+    download_images(download_folder)
